@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, HttpUrl
 import requests
 import trafilatura
@@ -15,7 +16,6 @@ app = FastAPI(
 )
 
 # Mount MCP with Streamable HTTP transport (compatible with Cursor, Claude, etc.)
-# Endpoint: POST /mcp  (Streamable HTTP - modern MCP spec)
 mcp_app = mcp.streamable_http_app()
 app.mount("/mcp", mcp_app)
 
@@ -65,14 +65,33 @@ def health():
 @app.post("/convert", response_model=ConvertResponse, tags=["Converter"])
 def convert(req: ConvertRequest):
     """
-    Convert a URL to Markdown.
-
-    - **url**: The URL to convert (must be a valid HTTP/HTTPS URL)
-    - Returns: The extracted Markdown content
+    Convert a URL to Markdown (JSON API).
+    - **url**: The URL to convert
+    - Returns: JSON with url + markdown
     """
     try:
         md = extract_markdown(str(req.url))
         return ConvertResponse(url=str(req.url), markdown=md)
+    except requests.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch URL: {e}")
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/{full_url:path}", response_class=PlainTextResponse, tags=["Jina-style"])
+def convert_from_path(full_url: str):
+    """
+    Jina Reader-style endpoint.
+    Usage: GET http://localhost:8000/https://example.com
+    Returns the page content as plain Markdown text.
+    """
+    # Ensure the URL has a scheme
+    if not full_url.startswith("http://") and not full_url.startswith("https://"):
+        full_url = "https://" + full_url
+    try:
+        return extract_markdown(full_url)
     except requests.HTTPError as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch URL: {e}")
     except ValueError as e:
