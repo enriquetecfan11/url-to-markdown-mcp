@@ -3,18 +3,21 @@ from pydantic import BaseModel, HttpUrl
 import requests
 import trafilatura
 from mcp.server.fastmcp import FastMCP
-from app.sse import create_sse_server
 
-# --- App & MCP setup ---
-app = FastAPI(
-    title="URL to Markdown API",
-    description="Converts any URL to Markdown. Also exposes an MCP SSE server for AI integrations.",
-    version="1.0.0",
-)
+# --- MCP setup ---
 mcp = FastMCP("url-to-markdown")
 
-# Mount SSE server at /mcp (not at / to avoid shadowing FastAPI routes)
-app.mount("/mcp", create_sse_server(mcp))
+# --- FastAPI app ---
+app = FastAPI(
+    title="URL to Markdown API",
+    description="Converts any URL to Markdown. Also exposes an MCP server for AI integrations.",
+    version="1.0.0",
+)
+
+# Mount MCP with Streamable HTTP transport (compatible with Cursor, Claude, etc.)
+# Endpoint: POST /mcp  (Streamable HTTP - modern MCP spec)
+mcp_app = mcp.streamable_http_app()
+app.mount("/mcp", mcp_app)
 
 
 # --- Schemas ---
