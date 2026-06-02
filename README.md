@@ -2,6 +2,10 @@
 
 > FastAPI service that converts any URL to Markdown + MCP server via SSE for AI integrations.
 
+## Requirements
+
+> **Python >= 3.10 is required.** The `mcp` SDK does not support Python 3.9 or below.
+
 ## What is this?
 
 A lightweight Python service with two interfaces:
@@ -33,25 +37,46 @@ url-to-markdown-mcp/
 
 ## Installation
 
-### Local (Python)
+### 0. Check your Python version
 
 ```bash
-# 1. Clone the repo
+python3 --version
+# Must be 3.10 or higher. If not, install it:
+```
+
+**macOS (with pyenv):**
+
+```bash
+brew install pyenv
+pyenv install 3.11
+pyenv local 3.11   # sets 3.11 for this project folder
+```
+
+**Or with Homebrew directly:**
+
+```bash
+brew install python@3.11
+# Then use: /opt/homebrew/bin/python3.11
+```
+
+### 1. Clone and set up
+
+```bash
 git clone https://github.com/enriquetecfan11/url-to-markdown-mcp.git
 cd url-to-markdown-mcp
 
-# 2. Create virtualenv
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# Create virtualenv with Python 3.10+
+python3.11 -m venv .venv          # adjust version as needed
+source .venv/bin/activate
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Run
+# Run
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Docker
+### Docker (no Python version worries)
 
 ```bash
 # Build
