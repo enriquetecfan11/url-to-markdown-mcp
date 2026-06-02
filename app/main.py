@@ -13,8 +13,8 @@ app = FastAPI(
 )
 mcp = FastMCP("url-to-markdown")
 
-# Mount SSE server at /sse
-app.mount("/", create_sse_server(mcp))
+# Mount SSE server at /mcp (not at / to avoid shadowing FastAPI routes)
+app.mount("/mcp", create_sse_server(mcp))
 
 
 # --- Schemas ---
